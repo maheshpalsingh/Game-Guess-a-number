@@ -84,7 +84,7 @@ const StartGame = (props) => {
             </View>
             <View style={styles.button}>
               <Button
-                title="Confirm"
+                title="Confirm "
                 onPress={confirmInput}
                 color={Colors.primary}
               />
