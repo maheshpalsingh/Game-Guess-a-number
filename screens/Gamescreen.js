@@ -7,7 +7,9 @@ import {
   Alert,
   ScrollView,
   FlatList,
+  Dimensions,
 } from "react-native";
+import * as ScreenOrientation from "expo-screen-orientation";
 import { Ionicons } from "@expo/vector-icons";
 import Card from "../components/Card";
 import DefaultStyles from "../constants/default-styles";
@@ -38,10 +40,27 @@ const renderedGuess = (noofguess, value) => (
   </View>
 );
 const Gamescreen = (props) => {
+  // ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT);
   const initialGuess = generateRandom(1, 100, props.userChoice);
   const [currentGuess, setcurrentGuess] = useState(initialGuess);
   const [pastguess, setpastguess] = useState([initialGuess]);
   const { onGameOver, userChoice } = props;
+  const [availablewidth, setavailablewidth] = useState(
+    Dimensions.get("window").width
+  );
+  const [availableheight, setavailableheight] = useState(
+    Dimensions.get("window").height
+  );
+  useEffect(() => {
+    const layout = () => {
+      setavailableheight(Dimensions.get("window").height),
+        setavailablewidth(Dimensions.get("window").width);
+    };
+    Dimensions.addEventListener("change", layout);
+    return () => {
+      Dimensions.removeEventListener("change", layout);
+    };
+  });
   useEffect(() => {
     if (currentGuess === userChoice) {
       onGameOver(pastguess.length);
@@ -74,6 +93,31 @@ const Gamescreen = (props) => {
     //setguesscnt((curRounds) => curRounds + 1);
     setpastguess((curPastguess) => [nextGuess, ...curPastguess]);
   };
+
+  if (availableheight < 500) {
+    return (
+      <View style={styles.screen}>
+        <Text style={DefaultStyles.title}>Opponents Guess</Text>
+        <View style={styles.smallscreen}>
+          <MyButton onPress={nextGuessHandler.bind(this, "lower")}>
+            <Ionicons name="arrow-down-circle" size={24} color="black" />
+          </MyButton>
+          <NumberContainer> {currentGuess} </NumberContainer>
+          <MyButton onPress={nextGuessHandler.bind(this, "greater")}>
+            <Ionicons name="arrow-up-circle" size={24} color="black" />
+          </MyButton>
+        </View>
+        <View style={styles.listContainer}>
+          <FlatList
+            keyExtractor={(item) => item}
+            data={pastguess}
+            renderItem={renderedGuess.bind(this, pastguess.length)}
+            contentContainerStyle={styles.list}
+          />
+        </View>
+      </View>
+    );
+  }
   return (
     <View style={styles.screen}>
       <Text style={DefaultStyles.title}>Opponents Guess</Text>
@@ -111,12 +155,18 @@ const styles = StyleSheet.create({
     padding: 10,
     alignItems: "center",
   },
+  smallscreen: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+  },
   buttonContainer: {
     flexDirection: "row",
     justifyContent: "space-around",
-    marginTop: 20,
-    width: 300,
-    maxWidth: "80%",
+    //marginTop: 20,
+    marginTop: Dimensions.get("window").height > 600 ? 15 : 5,
+    width: Dimensions.get("window").width / 3,
+    maxWidth: "95%",
+    minWidth: 300,
   },
   list: {
     flexGrow: 1,
@@ -125,7 +175,7 @@ const styles = StyleSheet.create({
   },
   listContainer: {
     flex: 1,
-    width: "60%",
+    width: Dimensions.get("window").width > 400 ? "60%" : "80%",
   },
   listItems: {
     flexDirection: "row",
